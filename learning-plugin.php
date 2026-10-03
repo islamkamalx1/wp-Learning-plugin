@@ -223,3 +223,75 @@ if ( ! defined( 'ABSPATH' ) ) {
 // }
 
 // add_action('wp_loaded', 'unsafe_product_query');
+
+// #### point 7 ####
+
+function learning_plugin_activate() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'learning_log';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+    $sql = "CREATE TABLE $table_name (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        post_id bigint(20) unsigned NOT NULL,
+        message text NOT NULL,
+        created_at datetime NOT NULL,
+        PRIMARY KEY (id),
+        KEY post_id (post_id)
+    ) $charset_collate;";
+
+    dbDelta($sql);
+}
+
+register_activation_hook(
+    __FILE__,
+    'learning_plugin_activate'
+);
+
+function learning_log_product_save($post_id, $update) {
+    global $wpdb;
+
+    // Avoid autosaves
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Avoid revisions
+    if (wp_is_post_revision($post_id)) {
+        return;
+    }
+
+    // Avoid saving from an unauthorized user
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    $table_name = $wpdb->prefix . 'learning_log';
+
+    $message = $update
+        ? 'Product updated'
+        : 'Product created';
+
+    $wpdb->insert(
+        $table_name,
+        [
+            'post_id'    => $post_id,
+            'message'    => $message,
+            'created_at' => current_time('mysql'),
+        ],
+        [
+            '%d',
+            '%s',
+        ]
+    );
+}
+
+add_action(
+    'save_post_product',
+    'learning_log_product_save',
+    10,
+    2
+);
