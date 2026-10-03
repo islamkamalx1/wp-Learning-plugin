@@ -12,78 +12,48 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-error_log( 'Learning Plugin: main file loaded' );
+// رجع ال post + revisions بتوعه
+// SELECT ID, post_parent, post_type, post_status, post_title
+// FROM wp_posts
+// WHERE ID = 87
+//    OR post_parent = 87;
 
-define( 'LEARNING_PLUGIN_VERSION', '1.0.0' );
-define( 'LEARNING_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
-define( 'LEARNING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+// هنا رجع الmetadata بتاعة البوست و اللي فيها الcustom field اللي ضيفته
+// SELECT *
+// FROM wp_postmeta
+// WHERE post_id = 87;
 
-register_activation_hook( __FILE__, function () {
-    update_option( 'learning_plugin_activated_at', time() );
-} );
+// رجع ال terms بتوعه و اللي هي ال categories و ال tags
+// SELECT *
+// FROM wp_term_relationships
+// WHERE object_id = 87;
 
-register_deactivation_hook( __FILE__, function () {
-    delete_option( 'learning_plugin_activated_at' );
-} );
+// دا رجع الcategory
+// SELECT *
+// FROM wp_term_taxonomy
+// WHERE term_taxonomy_id IN (87);
 
-require_once LEARNING_PLUGIN_PATH . 'includes/class-learning-product-listener.php';
-require_once LEARNING_PLUGIN_PATH . 'includes/class-learning-plugin.php';
+// دا رجع ال tag
+// SELECT *
+// FROM wp_term_taxonomy
+// WHERE term_taxonomy_id IN (86);
 
-add_action( 'init', function () {
-    error_log( 'Learning Plugin: init' );
-} );
+// رجع اسم الكاتيجوري
+// SELECT *
+// FROM wp_terms
+// WHERE term_id IN (87);
 
-add_action( 'wp_loaded', function () {
-    error_log( 'Learning Plugin: wp_loaded' );
-} );
+// رجع اسم التاج
+// SELECT *
+// FROM wp_terms
+// WHERE term_id IN (86);
 
-add_action( 'rest_api_init', function () {
-    error_log( 'Learning Plugin: rest_api_init' );
-} );
+// رجع الميتاداتا للكاتيجوري
+// SELECT *
+// FROM wp_termmeta
+// WHERE term_id IN (87);
 
-add_action( 'template_redirect', function () {
-    error_log( 'Learning Plugin: template_redirect' );
-} );
-
-add_action( 'admin_init', function () {
-    error_log( 'Learning Plugin: admin_init' );
-} );
-
-add_filter( 'the_title', function ( $title, $id ) {
-    return 'product' === get_post_type( $id ) ? $title . ' ★' : $title;
-}, 20, 2 );
-
-add_filter( 'the_title', function ( $title, $id ) {
-    return 'product' === get_post_type( $id ) ? $title . ' (B)' : $title;
-}, 10, 2 );
-
-add_action( 'save_post', function ( $post_id, $post, $update ) {
-    error_log( sprintf( 'Learning Plugin: save_post id=%d type=%s status=%s update=%s', $post_id, $post->post_type, $post->post_status, $update ? 'yes' : 'no' ) );
-
-    if ( 'product' === $post->post_type ) {
-        do_action( 'learning_product_saved', $post_id );
-    }
-}, 10, 3 );
-
-
-add_action( 'plugins_loaded', function () {
-  error_log( 'Learning Plugin: plugins_loaded' );
-
-    if ( ! class_exists( 'WooCommerce' ) ) {
-        add_action( 'admin_notices', function () {
-            ?>
-            <div class="notice notice-error">
-                <p>
-                    <strong>Learning Plugin</strong>
-                    requires WooCommerce to be active.
-                </p>
-            </div>
-            <?php
-        } );
-
-        return;
-    }
-
-
-    Learning_Plugin::instance();
-} );
+//رجع الميتاداتا للتاج
+// SELECT *
+// FROM wp_termmeta
+// WHERE term_id IN (86);
