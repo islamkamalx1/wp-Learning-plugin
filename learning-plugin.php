@@ -192,3 +192,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 // }
 
 // add_action('wp_loaded', 'learning_query_products_wpdb');
+
+// #### point 6 ####
+
+// function unsafe_product_query() {
+//     global $wpdb;
+
+//     $category = $_GET['category'] ?? 'Clothing';
+
+//     $sql = "
+//         SELECT p.ID, p.post_title
+//         FROM {$wpdb->posts} AS p
+//         INNER JOIN {$wpdb->term_relationships} AS tr
+//             ON p.ID = tr.object_id
+//         INNER JOIN {$wpdb->term_taxonomy} AS tt
+//             ON tr.term_taxonomy_id = tt.term_taxonomy_id
+//         INNER JOIN {$wpdb->terms} AS t
+//             ON tt.term_id = t.term_id
+//         WHERE p.post_type = 'product'
+//           AND p.post_status = 'publish'
+//           AND tt.taxonomy = 'product_cat'
+//           AND t.name = '$category'
+//         LIMIT 10
+//     ";
+
+//     $results = $wpdb->get_results($sql);
+
+//     error_log('UNSAFE SQL: ' . $sql);
+//     error_log(print_r($results, true));
+// }
+
+// add_action('wp_loaded', 'unsafe_product_query');
