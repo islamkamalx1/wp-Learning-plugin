@@ -74,3 +74,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 //     'a' => 1,
 //     'b' => [2, 3]
 // ]
+
+// #### point 3 ####
+
+// SELECT
+//     option_name,
+//     LENGTH(option_value) AS size,
+//     autoload
+// FROM wp_options
+// WHERE autoload IN ('yes', 'on', 'auto-on', 'auto')
+// ORDER BY size DESC
+// LIMIT 10;
+// النتيجة
+// option_name	size	autoload
+// _transient_wp_core_block_css_files	23778	on
+// rewrite_rules	18070	on
+// _transient_wp_styles_for_blocks	11341	on
+// wp_user_roles	7811	on
+// cron	4391	on
+// widget_block	890	auto
+// woocommerce_paypal_settings	866	on
+// _transient_wc_attribute_taxonomies	464	on
+// woocommerce_ces_tracks_queue	462	auto
+// woocommerce_onboarding_profile	365	auto
