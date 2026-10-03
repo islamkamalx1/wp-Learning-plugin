@@ -100,32 +100,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // #### point 4 ####
 
-function learning_query_products() {
+// function learning_query_products() {
 
-    $query = new WP_Query([
-        'post_type'      => 'product',
-        'posts_per_page' => 10,
-        'paged'          => 1,
-        'fields'         => 'ids',
+//     $query = new WP_Query([
+//         'post_type'      => 'product',
+//         'posts_per_page' => 10,
+//         'paged'          => 1,
+//         'fields'         => 'ids',
 
-        'tax_query' => [
-            [
-                'taxonomy' => 'product_cat',
-                'field'    => 'name',
-                'terms'    => 'Clothing',
-            ],
-        ],
+//         'tax_query' => [
+//             [
+//                 'taxonomy' => 'product_cat',
+//                 'field'    => 'name',
+//                 'terms'    => 'Clothing',
+//             ],
+//         ],
 
-        'meta_query' => [
-            [
-                'key'     => '_stock_status',
-                'value'   => 'instock',
-                'compare' => '=',
-            ],
-        ],
-    ]);
+//         'meta_query' => [
+//             [
+//                 'key'     => '_stock_status',
+//                 'value'   => 'instock',
+//                 'compare' => '=',
+//             ],
+//         ],
+//     ]);
 
-    error_log('Products Query: ' . $query->request);
+//     error_log('Products Query: ' . $query->request);
 //     [03-Oct-2026 15:37:41 UTC] Products Query: SELECT SQL_CALC_FOUND_ROWS  wp_posts.ID
 //                                          FROM wp_posts  LEFT JOIN wp_term_relationships ON (wp_posts.ID = wp_term_relationships.object_id) INNER JOIN wp_postmeta ON ( wp_posts.ID = wp_postmeta.post_id )
 //                                          WHERE 1=1  AND ( 
@@ -137,9 +137,9 @@ function learning_query_products() {
 //                                          GROUP BY wp_posts.ID
 //                                          ORDER BY wp_posts.post_date DESC
 //                                          LIMIT 0, 10
-}
+// }
 
-add_action('wp_loaded', 'learning_query_products');
+// add_action('wp_loaded', 'learning_query_products');
 // شرح الjoins
 // 1- بتربط الproduct الterm
 // INNER JOIN wp_term_relationships
@@ -151,3 +151,44 @@ add_action('wp_loaded', 'learning_query_products');
 // 3- بتجيب ال custom meta للproduct
 // INNER JOIN wp_postmeta
 //     ON wp_posts.ID = wp_postmeta.post_id
+
+// #### point 5 ####
+
+// function learning_query_products_wpdb() {
+//     global $wpdb;
+
+//     $sql = "
+//         SELECT DISTINCT p.ID
+//         FROM {$wpdb->posts} AS p
+//         INNER JOIN {$wpdb->term_relationships} AS tr
+//             ON p.ID = tr.object_id
+//         INNER JOIN {$wpdb->term_taxonomy} AS tt
+//             ON tr.term_taxonomy_id = tt.term_taxonomy_id
+//         INNER JOIN {$wpdb->terms} AS t
+//             ON tt.term_id = t.term_id
+//         INNER JOIN {$wpdb->postmeta} AS pm
+//             ON p.ID = pm.post_id
+//         WHERE p.post_type = %s
+//           AND p.post_status = %s
+//           AND tt.taxonomy = %s
+//           AND t.name = %s
+//           AND pm.meta_key = %s
+//           AND pm.meta_value = %s
+//         LIMIT %d
+//     ";
+
+//     $prepared_sql = $wpdb->prepare(
+//         $sql,
+//         'product',
+//         'publish',
+//         'product_cat',
+//         'Clothing',
+//         '_stock_status',
+//         'instock',
+//         10
+//     );
+
+//     error_log('Query: ' . $prepared_sql);
+// }
+
+// add_action('wp_loaded', 'learning_query_products_wpdb');
