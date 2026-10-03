@@ -97,3 +97,57 @@ if ( ! defined( 'ABSPATH' ) ) {
 // _transient_wc_attribute_taxonomies	464	on
 // woocommerce_ces_tracks_queue	462	auto
 // woocommerce_onboarding_profile	365	auto
+
+// #### point 4 ####
+
+function learning_query_products() {
+
+    $query = new WP_Query([
+        'post_type'      => 'product',
+        'posts_per_page' => 10,
+        'paged'          => 1,
+        'fields'         => 'ids',
+
+        'tax_query' => [
+            [
+                'taxonomy' => 'product_cat',
+                'field'    => 'name',
+                'terms'    => 'Clothing',
+            ],
+        ],
+
+        'meta_query' => [
+            [
+                'key'     => '_stock_status',
+                'value'   => 'instock',
+                'compare' => '=',
+            ],
+        ],
+    ]);
+
+    error_log('Products Query: ' . $query->request);
+//     [03-Oct-2026 15:37:41 UTC] Products Query: SELECT SQL_CALC_FOUND_ROWS  wp_posts.ID
+//                                          FROM wp_posts  LEFT JOIN wp_term_relationships ON (wp_posts.ID = wp_term_relationships.object_id) INNER JOIN wp_postmeta ON ( wp_posts.ID = wp_postmeta.post_id )
+//                                          WHERE 1=1  AND ( 
+//   wp_term_relationships.term_taxonomy_id IN (70,71,72,73)
+// ) AND ( 
+//   ( wp_postmeta.meta_key = '_stock_status' AND wp_postmeta.meta_value = 'instock' )
+// ) AND ((wp_posts.post_type = 'product' AND (wp_posts.post_status = 'publish' 
+// OR wp_posts.post_status = 'private')))
+//                                          GROUP BY wp_posts.ID
+//                                          ORDER BY wp_posts.post_date DESC
+//                                          LIMIT 0, 10
+}
+
+add_action('wp_loaded', 'learning_query_products');
+// شرح الjoins
+// 1- بتربط الproduct الterm
+// INNER JOIN wp_term_relationships
+//     ON wp_posts.ID = wp_term_relationships.object_id
+// 2- بتميز product category عن taxonomies تانية زي tags
+// INNER JOIN wp_term_taxonomy
+//     ON wp_term_relationships.term_taxonomy_id
+//        = wp_term_taxonomy.term_taxonomy_id
+// 3- بتجيب ال custom meta للproduct
+// INNER JOIN wp_postmeta
+//     ON wp_posts.ID = wp_postmeta.post_id
