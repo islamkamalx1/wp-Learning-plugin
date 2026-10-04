@@ -216,3 +216,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Admin	Application Password	403
 // Learning Viewer	Application Password	200
 // Customer	Application Password	403
+
+// #### point 6 ####
+// Without authentication any stranger could access the endpoint and retrieve learning notes that should only be available to users with the view_learning_notes capability.
