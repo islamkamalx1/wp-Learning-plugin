@@ -102,58 +102,110 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // #### point 3 ####
 
-register_rest_route(
-    'learning/v1',
-    '/notes',
-    array(
-        'methods'             => 'POST',
-        'callback'            => 'learning_create_note',
-        'permission_callback' => function () {
-            return current_user_can( 'manage_woocommerce' );
-        },
-        'args'                => array(
-            'text' => array(
-                'required'          => true,
-                'sanitize_callback' => 'sanitize_text_field',
-            ),
-        ),
-    )
-);
+// register_rest_route(
+//     'learning/v1',
+//     '/notes',
+//     array(
+//         'methods'             => 'POST',
+//         'callback'            => 'learning_create_note',
+//         'permission_callback' => function () {
+//             return current_user_can( 'manage_woocommerce' );
+//         },
+//         'args'                => array(
+//             'text' => array(
+//                 'required'          => true,
+//                 'sanitize_callback' => 'sanitize_text_field',
+//             ),
+//         ),
+//     )
+// );
 
-function learning_create_note( WP_REST_Request $request ) {
+// function learning_create_note( WP_REST_Request $request ) {
+//     global $wpdb;
+
+//     $table_name = $wpdb->prefix . 'learning_log';
+
+//     $text = $request->get_param( 'text' );
+
+//     $inserted = $wpdb->insert(
+//         $table_name,
+//         array(
+//             'message'    => $text,
+//             'created_at' => current_time( 'mysql' ),
+//         ),
+//         array(
+//             '%s',
+//             '%s',
+//         )
+//     );
+
+//     if ( false === $inserted ) {
+//         return new WP_Error(
+//             'note_insert_failed',
+//             'Could not save the note.',
+//             array(
+//                 'status' => 500,
+//             )
+//         );
+//     }
+
+//     return new WP_REST_Response(
+//         array(
+//             'id'      => $wpdb->insert_id,
+//             'message' => $text,
+//         ),
+//         201
+//     );
+// }
+
+// ### point 4 ####
+
+register_activation_hook( __FILE__, 'learning_activate' );
+register_deactivation_hook( __FILE__, 'learning_deactivate' );
+
+function learning_activate() {
+    add_role(
+        'learning_viewer',
+        'Learning Viewer',
+        array(
+            'read'                => true,
+            'view_learning_notes' => true,
+        )
+    );
+}
+
+
+function learning_deactivate() {
+    remove_role( 'learning_viewer' );
+}
+
+add_action( 'rest_api_init', function () {
+
+    register_rest_route(
+        'learning/v1',
+        '/notes',
+        array(
+            'methods'             => 'GET',
+            'callback'            => 'learning_get_notes',
+            'permission_callback' => function () {
+                return current_user_can( 'view_learning_notes' );
+            },
+        )
+    );
+
+} );
+
+function learning_get_notes( WP_REST_Request $request ) {
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'learning_log';
 
-    $text = $request->get_param( 'text' );
-
-    $inserted = $wpdb->insert(
-        $table_name,
-        array(
-            'message'    => $text,
-            'created_at' => current_time( 'mysql' ),
-        ),
-        array(
-            '%s',
-            '%s',
-        )
+    $notes = $wpdb->get_results(
+        "SELECT id, message, created_at
+         FROM $table_name
+         ORDER BY created_at DESC",
+        ARRAY_A
     );
 
-    if ( false === $inserted ) {
-        return new WP_Error(
-            'note_insert_failed',
-            'Could not save the note.',
-            array(
-                'status' => 500,
-            )
-        );
-    }
-
-    return new WP_REST_Response(
-        array(
-            'id'      => $wpdb->insert_id,
-            'message' => $text,
-        ),
-        201
-    );
+    return rest_ensure_response( $notes );
 }
