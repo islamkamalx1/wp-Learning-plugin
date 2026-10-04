@@ -160,52 +160,59 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // ### point 4 ####
 
-register_activation_hook( __FILE__, 'learning_activate' );
-register_deactivation_hook( __FILE__, 'learning_deactivate' );
+// register_activation_hook( __FILE__, 'learning_activate' );
+// register_deactivation_hook( __FILE__, 'learning_deactivate' );
 
-function learning_activate() {
-    add_role(
-        'learning_viewer',
-        'Learning Viewer',
-        array(
-            'read'                => true,
-            'view_learning_notes' => true,
-        )
-    );
-}
+// function learning_activate() {
+//     add_role(
+//         'learning_viewer',
+//         'Learning Viewer',
+//         array(
+//             'read'                => true,
+//             'view_learning_notes' => true,
+//         )
+//     );
+// }
 
 
-function learning_deactivate() {
-    remove_role( 'learning_viewer' );
-}
+// function learning_deactivate() {
+//     remove_role( 'learning_viewer' );
+// }
 
-add_action( 'rest_api_init', function () {
+// add_action( 'rest_api_init', function () {
 
-    register_rest_route(
-        'learning/v1',
-        '/notes',
-        array(
-            'methods'             => 'GET',
-            'callback'            => 'learning_get_notes',
-            'permission_callback' => function () {
-                return current_user_can( 'view_learning_notes' );
-            },
-        )
-    );
+//     register_rest_route(
+//         'learning/v1',
+//         '/notes',
+//         array(
+//             'methods'             => 'GET',
+//             'callback'            => 'learning_get_notes',
+//             'permission_callback' => function () {
+//                 return current_user_can( 'view_learning_notes' );
+//             },
+//         )
+//     );
 
-} );
+// } );
 
-function learning_get_notes( WP_REST_Request $request ) {
-    global $wpdb;
+// function learning_get_notes( WP_REST_Request $request ) {
+//     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'learning_log';
+//     $table_name = $wpdb->prefix . 'learning_log';
 
-    $notes = $wpdb->get_results(
-        "SELECT id, message, created_at
-         FROM $table_name
-         ORDER BY created_at DESC",
-        ARRAY_A
-    );
+//     $notes = $wpdb->get_results(
+//         "SELECT id, message, created_at
+//          FROM $table_name
+//          ORDER BY created_at DESC",
+//         ARRAY_A
+//     );
 
-    return rest_ensure_response( $notes );
-}
+//     return rest_ensure_response( $notes );
+// }
+
+// ### point 5 ####
+
+// Nobody	NO Auth	401
+// Admin	Application Password	403
+// Learning Viewer	Application Password	200
+// Customer	Application Password	403
