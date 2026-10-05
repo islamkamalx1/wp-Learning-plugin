@@ -90,20 +90,48 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // ### point 2 ####
 
-add_action( 'learning_hourly', 'learning_hourly_callback' );
+// add_action( 'learning_hourly', 'learning_hourly_callback' );
 
-function learning_hourly_callback() {
-    error_log( 'learning_hourly ran at ' . current_time( 'mysql' ) );
+// function learning_hourly_callback() {
+//     error_log( 'learning_hourly ran at ' . current_time( 'mysql' ) );
+// }
+
+// add_action( 'wp', 'learning_schedule_hourly' );
+
+// function learning_schedule_hourly() {
+//     if ( ! wp_next_scheduled( 'learning_hourly' ) ) {
+//         wp_schedule_event(
+//             time(),
+//             'hourly',
+//             'learning_hourly'
+//         );
+//     }
+// }
+
+// #### point 3 ####
+
+add_action(
+    'woocommerce_update_product',
+    'learning_enqueue_product_job'
+);
+
+function learning_enqueue_product_job( $product_id ) {
+    as_enqueue_async_action(
+        'learning_product_saved',
+        array(
+            'product_id' => $product_id,
+        ),
+        'learning'
+    );
 }
 
-add_action( 'wp', 'learning_schedule_hourly' );
+add_action(
+    'learning_product_saved',
+    'learning_process_product_saved'
+);
 
-function learning_schedule_hourly() {
-    if ( ! wp_next_scheduled( 'learning_hourly' ) ) {
-        wp_schedule_event(
-            time(),
-            'hourly',
-            'learning_hourly'
-        );
-    }
+function learning_process_product_saved( $product_id ) {
+    error_log(
+        'Action Scheduler processed product ID: ' . $product_id
+    );
 }
