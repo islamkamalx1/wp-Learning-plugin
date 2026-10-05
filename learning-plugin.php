@@ -138,7 +138,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // #### point 4 ####
 
-add_action( 'wp_footer', 'learning_print_products_fast' );
+// add_action( 'wp_footer', 'learning_print_products_fast' );
 
 // N+1 query problem
 // function learning_print_products_slow() {
@@ -186,55 +186,71 @@ add_action( 'wp_footer', 'learning_print_products_fast' );
 // }
 
 // batch query
-function learning_print_products_fast() {
+// function learning_print_products_fast() {
+//     $products = wc_get_products(
+//         array(
+//             'limit'  => 50,
+//             'status' => 'publish',
+//         )
+//     );
+
+//     if ( empty( $products ) ) {
+//         return;
+//     }
+
+//     $product_ids = array_map(
+//          function ( $product ) {
+//             return $product->get_id();
+//         },
+//         $products
+//     );
+
+//     // Fetch categories for all products in one batch.
+//     $terms = wp_get_object_terms(
+//         $product_ids,
+//         'product_cat',
+//         array(
+//             'fields' => 'all_with_object_id',
+//         )
+//     );
+
+//     $categories_by_product = array();
+
+//     foreach ( $terms as $term ) {
+//         $categories_by_product[ $term->object_id ][] = $term->name;
+//     }
+
+//     echo '<div style="padding:20px">';
+//     echo '<h3>Fast Products</h3>';
+
+//     foreach ( $products as $product ) {
+//         $product_id = $product->get_id();
+
+//         $category_names = $categories_by_product[ $product_id ] ?? array();
+
+//         printf(
+//             '<p>%s — %s — Categories: %s</p>',
+//             esc_html( $product->get_name() ),
+//             esc_html( $product->get_price() ),
+//             esc_html( implode( ', ', $category_names ) )
+//         );
+//     }
+
+//     echo '</div>';
+// }
+
+// #### point 5 ####
+
+add_action( 'init', 'learning_heavy_init' );
+
+function learning_heavy_init() {
     $products = wc_get_products(
         array(
-            'limit'  => 50,
-            'status' => 'publish',
+            'limit' => -1,
         )
     );
 
-    if ( empty( $products ) ) {
-        return;
-    }
-
-    $product_ids = array_map(
-         function ( $product ) {
-            return $product->get_id();
-        },
-        $products
+    error_log(
+        'Heavy init loaded ' . count( $products ) . ' products.'
     );
-
-    // Fetch categories for all products in one batch.
-    $terms = wp_get_object_terms(
-        $product_ids,
-        'product_cat',
-        array(
-            'fields' => 'all_with_object_id',
-        )
-    );
-
-    $categories_by_product = array();
-
-    foreach ( $terms as $term ) {
-        $categories_by_product[ $term->object_id ][] = $term->name;
-    }
-
-    echo '<div style="padding:20px">';
-    echo '<h3>Fast Products</h3>';
-
-    foreach ( $products as $product ) {
-        $product_id = $product->get_id();
-
-        $category_names = $categories_by_product[ $product_id ] ?? array();
-
-        printf(
-            '<p>%s — %s — Categories: %s</p>',
-            esc_html( $product->get_name() ),
-            esc_html( $product->get_price() ),
-            esc_html( implode( ', ', $category_names ) )
-        );
-    }
-
-    echo '</div>';
 }
