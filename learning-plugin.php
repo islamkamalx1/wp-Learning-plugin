@@ -241,16 +241,73 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // #### point 5 ####
 
-add_action( 'init', 'learning_heavy_init' );
+// add_action( 'init', 'learning_heavy_init' );
 
-function learning_heavy_init() {
-    $products = wc_get_products(
-        array(
-            'limit' => -1,
-        )
+// function learning_heavy_init() {
+//     $products = wc_get_products(
+//         array(
+//             'limit' => -1,
+//         )
+//     );
+
+//     error_log(
+//         'Heavy init loaded ' . count( $products ) . ' products.'
+//     );
+// }
+
+// #### point 6 ####
+
+// add_action( 'wp_footer', 'learning_slow_api' );
+// takes 6.04 s to load the page
+// function learning_slow_api() {
+//     // $response = wp_remote_get(
+//     //     'https://httpbin.org/delay/5'
+//     // );
+//     $response = wp_remote_get(
+//         'https://httpbin.org/delay/5',
+//         array(
+//             'timeout' => 2,
+//         )
+// );
+//     if ( is_wp_error( $response ) ) {
+//         return;
+//     }
+
+//     echo '<p>API request completed.</p>';
+// }
+add_action( 'wp_footer', 'learning_cached_api' );
+
+function learning_cached_api() {
+    $cache_key = 'learning_httpbin_response';
+
+    $cached = get_transient( $cache_key );
+
+    if ( false !== $cached ) {
+        echo '<p>API data from cache.</p>';
+
+        return;
+    }
+
+    $response = wp_remote_get(
+        'https://httpbin.org/delay/5'
+      
     );
 
-    error_log(
-        'Heavy init loaded ' . count( $products ) . ' products.'
+    if ( is_wp_error( $response ) ) {
+        error_log(
+            'API request failed: ' . $response->get_error_message()
+        );
+
+        return;
+    }
+
+    $body = wp_remote_retrieve_body( $response );
+
+    set_transient(
+        $cache_key,
+        $body,
+        10 * MINUTE_IN_SECONDS
     );
+
+    echo '<p>API data fetched from remote API.</p>';
 }
