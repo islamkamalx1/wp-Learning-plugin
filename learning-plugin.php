@@ -110,28 +110,131 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // #### point 3 ####
 
-add_action(
-    'woocommerce_update_product',
-    'learning_enqueue_product_job'
-);
+// add_action(
+//     'woocommerce_update_product',
+//     'learning_enqueue_product_job'
+// );
 
-function learning_enqueue_product_job( $product_id ) {
-    as_enqueue_async_action(
-        'learning_product_saved',
+// function learning_enqueue_product_job( $product_id ) {
+//     as_enqueue_async_action(
+//         'learning_product_saved',
+//         array(
+//             'product_id' => $product_id,
+//         ),
+//         'learning'
+//     );
+// }
+
+// add_action(
+//     'learning_product_saved',
+//     'learning_process_product_saved'
+// );
+
+// function learning_process_product_saved( $product_id ) {
+//     error_log(
+//         'Action Scheduler processed product ID: ' . $product_id
+//     );
+// }
+
+// #### point 4 ####
+
+add_action( 'wp_footer', 'learning_print_products_fast' );
+
+// N+1 query problem
+// function learning_print_products_slow() {
+//     $products = wc_get_products(
+//         array(
+//             'limit'  => 50,
+//             'status' => 'publish',
+//         )
+//     );
+
+//     echo '<div style="padding:20px">';
+//     echo '<h3>Slow N+1 Products</h3>';
+
+//     foreach ( $products as $product ) {
+//         $product_id = $product->get_id();
+
+//         // Lookup categories separately for EVERY product.
+//         $category_names = array();
+
+//         $term_ids = wp_get_post_terms(
+//             $product_id,
+//             'product_cat',
+//             array(
+//                 'fields' => 'ids',
+//             )
+//         );
+
+//         foreach ( $term_ids as $term_id ) {
+//             $term = get_term( $term_id, 'product_cat' );
+
+//             if ( ! is_wp_error( $term ) ) {
+//                 $category_names[] = $term->name;
+//             }
+//         }
+
+//         printf(
+//             '<p>%s — %s — Categories: %s</p>',
+//             esc_html( $product->get_name() ),
+//             esc_html( $product->get_price() ),
+//             esc_html( implode( ', ', $category_names ) )
+//         );
+//     }
+
+//     echo '</div>';
+// }
+
+// batch query
+function learning_print_products_fast() {
+    $products = wc_get_products(
         array(
-            'product_id' => $product_id,
-        ),
-        'learning'
+            'limit'  => 50,
+            'status' => 'publish',
+        )
     );
-}
 
-add_action(
-    'learning_product_saved',
-    'learning_process_product_saved'
-);
+    if ( empty( $products ) ) {
+        return;
+    }
 
-function learning_process_product_saved( $product_id ) {
-    error_log(
-        'Action Scheduler processed product ID: ' . $product_id
+    $product_ids = array_map(
+         function ( $product ) {
+            return $product->get_id();
+        },
+        $products
     );
+
+    // Fetch categories for all products in one batch.
+    $terms = wp_get_object_terms(
+        $product_ids,
+        'product_cat',
+        array(
+            'fields' => 'all_with_object_id',
+        )
+    );
+
+    $categories_by_product = array();
+
+    foreach ( $terms as $term ) {
+        $categories_by_product[ $term->object_id ][] = $term->name;
+    }
+
+    echo '<div style="padding:20px">';
+    echo '<h3>Fast Products</h3>';
+
+    foreach ( $products as $product ) {
+        $product_id = $product->get_id();
+
+        $category_names = $categories_by_product[ $product_id ] ?? array();
+
+        printf(
+            '<p>%s — %s — Categories: %s</p>',
+            esc_html( $product->get_name() ),
+            esc_html( $product->get_price() ),
+            esc_html( implode( ', ', $category_names ) )
+        );
+    }
+
+    echo '</div>';
 }
